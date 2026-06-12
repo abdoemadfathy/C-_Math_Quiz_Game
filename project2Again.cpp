@@ -1,10 +1,11 @@
 #include <iostream>   
 #include <cstdlib>    
 #include <ctime>      
+#include <string>
+
 using namespace std;
 
 enum enQuestionsLevel { EasyLevel = 1, MedLevel = 2, HardLevel = 3, Mix = 4 };
-
 enum enOperationType { Add = 1, Sub = 2, Mult = 3, Div = 4, MixOp = 5 };
 
 int RandomNumber(int From, int To)
@@ -26,7 +27,7 @@ struct stQuestion
 struct stQuizz
 {
     stQuestion QuestionList[100];
-    short NumberOfQuestions;
+    short NumberOfQuestions = 0;
     enQuestionsLevel QuestionsLevel;
     enOperationType OpType;
     short NumberOfWrongAnswers = 0;
@@ -36,68 +37,83 @@ struct stQuizz
 
 enQuestionsLevel ReadQuestionsLevel()
 {
-	short QustionLevel;
-	do
-	{
-		cout << "Enter Questions Level [1] Easy, [2] Med, [3] Hard, [4] Mix ? \n";
-		cin >> QustionLevel;
-	} while (QustionLevel < 1 || QustionLevel > 4);
+    short QuestionLevel;
+    do
+    {
+        cout << "Enter Questions Level [1] Easy, [2] Med, [3] Hard, [4] Mix ? \n";
+        cin >> QuestionLevel;
+    } while (QuestionLevel < 1 || QuestionLevel > 4);
 
-	return (enQuestionsLevel)QustionLevel;
+    return (enQuestionsLevel)QuestionLevel;
 }
 
 enOperationType ReadOpType()
 {
-	short OpType;
-	do
-	{
-		cout << "Enter Operation Type [1] Add, [2] Sub, [3] Mul, [4] Div, [5] Mix ?\n ";
-		cin >> OpType;
-	} while (OpType < 1 || OpType > 5);
+    short OpType;
+    do
+    {
+        cout << "Enter Operation Type [1] Add, [2] Sub, [3] Mul, [4] Div, [5] Mix ?\n";
+        cin >> OpType;
+    } while (OpType < 1 || OpType > 5);
 
-	return (enOperationType)OpType;
+    return (enOperationType)OpType;
 }
 
 short ReadHowManyQuestions()
 {
-	int Num;
-	cout << "How Many Questions do you want to answer?:\n ";
-	cin >> Num;
-	return Num;
+    short Num;
+    do 
+    {
+        cout << "How Many Questions do you want to answer? (1 to 100):\n";
+        cin >> Num;
+    } while (Num < 1 || Num > 100);
+    return Num;
 }
 
-string GetOpTypeSympol(enOperationType OpType)
+string GetOpTypeSymbol(enOperationType OpType)
 {
-	string arrOpType[5] = { "Addation","Sub","Multiplication","Div", "Mix" };
-	return arrOpType[OpType - 1];
+    string arrOpType[5] = { "Addition", "Sub", "Multiplication", "Div", "Mix" };
+    return arrOpType[OpType - 1];
 }
 
 string GetQuestionLevelText(enQuestionsLevel QuestionLevel)
 {
-   
-    string arrLevel[4] = { "Easy","Meduim","Hard","Mix" };
+    string arrLevel[4] = { "Easy", "Medium", "Hard", "Mix" };
     return arrLevel[QuestionLevel - 1];
-        
 }
 
-string Operation(enOperationType OpType)
+string GetOperationSymbolText(enOperationType OpType)
 {
-	
-	
-	switch (OpType)
-	{
-	case 1:
-		return "+";
-		break;
-	case 2:
-		return "-";
-		break;
-	case 3:
-		return "*";
-		break;
-	default:
-		return"/";
-	}
+    switch (OpType)
+    {
+    case enOperationType::Add:
+        return "+";
+    case enOperationType::Sub:
+        return "-";
+    case enOperationType::Mult:
+        return "*";
+    case enOperationType::Div:
+        return "/";
+    default:
+        return "Mix";
+    }
+}
+
+int SimpleCalculator(int Number1, int Number2, enOperationType OpType)
+{
+    switch (OpType)
+    {
+    case enOperationType::Add:
+        return Number1 + Number2;
+    case enOperationType::Sub:
+        return Number1 - Number2;
+    case enOperationType::Mult:
+        return Number1 * Number2;
+    case enOperationType::Div:
+        return (Number2 != 0) ? (Number1 / Number2) : 0;
+    default:
+        return 0;
+    }
 }
 
 int ReadQuestionAnswer()
@@ -107,22 +123,21 @@ int ReadQuestionAnswer()
     return Answer; 
 }
 
-void PrintTheQuestion(stQuizz& Quizz, short QuestionNumber)
+void PrintTheQuestion(const stQuizz& Quizz, short QuestionNumber)
 {
-    cout << "\nQuestion [" << QuestionNumber + 1 << " \ " << Quizz.NumberOfQuestions << " ]\n\n";
+    cout << "\nQuestion [" << QuestionNumber + 1 << " / " << Quizz.NumberOfQuestions << "]\n\n";
     cout << Quizz.QuestionList[QuestionNumber].Number1 << endl;
-    cout <<"       " << Operation(Quizz.QuestionList[QuestionNumber].OperationType) << endl;
+    cout << "       " << GetOperationSymbolText(Quizz.QuestionList[QuestionNumber].OperationType) << endl;
     cout << Quizz.QuestionList[QuestionNumber].Number2 << endl;
     cout << "__________\n";
-
 }
 
 void SetScreenColor(bool AnswerResult)
 {
-    if (AnswerResult == true)
-        system("Color 2F");
+    if (AnswerResult)
+        system("Color 2F"); // Green
     else
-        system("Color 4F");
+        system("Color 4F"); // Red
 }
 
 void CorrectTheQuestionAnswer(stQuizz& Quizz, short QuestionNumber)
@@ -136,45 +151,21 @@ void CorrectTheQuestionAnswer(stQuizz& Quizz, short QuestionNumber)
     else
     {
         Quizz.QuestionList[QuestionNumber].AnswerResult = false;
-
         cout << "Wrong! Correct Answer is : " << Quizz.QuestionList[QuestionNumber].CorrectAnswer << endl;
         Quizz.NumberOfWrongAnswers++;
     }
-
     SetScreenColor(Quizz.QuestionList[QuestionNumber].AnswerResult);
-
 }
 
 void AskAndCorrectQuestionListAnswers(stQuizz& Quizz)
 {
-    for (short QuestionNumber = 0;QuestionNumber < Quizz.NumberOfQuestions;QuestionNumber++)
+    for (short QuestionNumber = 0; QuestionNumber < Quizz.NumberOfQuestions; QuestionNumber++)
     {
         PrintTheQuestion(Quizz, QuestionNumber);
         Quizz.QuestionList[QuestionNumber].PlayerAnswer = ReadQuestionAnswer();
         CorrectTheQuestionAnswer(Quizz, QuestionNumber);
- 
     }
     Quizz.isPass = (Quizz.NumberOfRightAnswers >= Quizz.NumberOfWrongAnswers);
-
-}
-
-int SimpleCalculator(int Number1, int Number2, enOperationType OpType)
-{
-    switch (OpType)
-    {
-    case enOperationType::Add :
-        return Number1 + Number2;
-        break;
-    case enOperationType::Sub :
-        return Number1 - Number2;
-        break;
-    case enOperationType::Mult :
-        return Number1 * Number2;
-        break;
-    case enOperationType::Div :
-        return Number1 / Number2;
-        break;
-    }
 }
 
 stQuestion GenerateQuestion(enQuestionsLevel QuestionLevel, enOperationType OpType)
@@ -191,37 +182,43 @@ stQuestion GenerateQuestion(enQuestionsLevel QuestionLevel, enOperationType OpTy
     }
 
     Question.OperationType = OpType;
+    Question.QuestionLevel = QuestionLevel;
 
     switch (QuestionLevel)
     {
-    case enQuestionsLevel::EasyLevel :
+    case enQuestionsLevel::EasyLevel:
         Question.Number1 = RandomNumber(1, 10);
-        Question.Number2  = RandomNumber(1, 10);
-        Question.CorrectAnswer = SimpleCalculator(Question.Number1, Question.Number2, Question.OperationType);
-        Question.QuestionLevel = QuestionLevel;
-        return Question;
-
-    case enQuestionsLevel::MedLevel :
+        Question.Number2 = RandomNumber(1, 10);
+        break;
+    case enQuestionsLevel::MedLevel:
         Question.Number1 = RandomNumber(10, 50);
         Question.Number2 = RandomNumber(10, 50);
-        Question.CorrectAnswer = SimpleCalculator(Question.Number1, Question.Number2, Question.OperationType);
-        Question.QuestionLevel = QuestionLevel;
-        return Question;
-
+        break;
     case enQuestionsLevel::HardLevel:
         Question.Number1 = RandomNumber(50, 100);
         Question.Number2 = RandomNumber(50, 100);
-        Question.CorrectAnswer = SimpleCalculator(Question.Number1, Question.Number2, Question.OperationType); 
-        Question.QuestionLevel = QuestionLevel; 
-        return Question; 
+        break;
+    default:
+        Question.Number1 = RandomNumber(1, 10);
+        Question.Number2 = RandomNumber(1, 10);
+        break;
     }
 
+    // حماية إضافية لعملية القسمة: منع ظهور الصفر في الرقم الثاني، وضمان أن البسط يقبل القسمة بدون كسور
+    if (Question.OperationType == enOperationType::Div)
+    {
+        if (Question.Number2 == 0) Question.Number2 = 2;
+        // تعديل الرقم الأول ليصبح ناتج ضرب الرقمين، لضمان خروج ناتج القسمة كعدد صحيح دائماً
+        Question.Number1 = Question.Number1 * Question.Number2;
+    }
+
+    Question.CorrectAnswer = SimpleCalculator(Question.Number1, Question.Number2, Question.OperationType);
     return Question; 
 }
 
 void GenerateQuizzQuestions(stQuizz& Quizz)
 {
-    for (int Question = 0;Question < Quizz.NumberOfQuestions;Question++)
+    for (int Question = 0; Question < Quizz.NumberOfQuestions; Question++)
     {
         Quizz.QuestionList[Question] = GenerateQuestion(Quizz.QuestionsLevel, Quizz.OpType);
     }
@@ -229,24 +226,20 @@ void GenerateQuizzQuestions(stQuizz& Quizz)
 
 string GetFinalResultsText(bool Pass)
 {
-    if (Pass == true)
-       return "Pass";
-    else
-        return "Fail";
+    return (Pass) ? "Pass" : "Fail";
 }
 
-void PrintQuizzResult(stQuizz Quizz)
+void PrintQuizzResult(const stQuizz& Quizz)
 {
     cout << "\n";
     cout << "    *************** E N D I N G   G A M E ***************\n\n";
-    cout << "             Final Results is  " << GetFinalResultsText(Quizz.isPass)  << endl;
-    cout << "\n             Number Of Questions is :" << Quizz.NumberOfQuestions  << endl;
-    cout << "\n           Questions Level :" <<GetQuestionLevelText(Quizz.QuestionsLevel ) << endl;
-    cout << "\n            OP Type :" << GetOpTypeSympol(Quizz.OpType )  << endl;
-    cout << "\n         Number Of Right Answers is : " << Quizz.NumberOfRightAnswers  << endl;
-    cout << "\n             Number Of Wrong Answers is : " << Quizz.NumberOfWrongAnswers  << endl;
-    cout << "                   _____________________________________\n";
-                  
+    cout << "             Final Results is  " << GetFinalResultsText(Quizz.isPass) << endl;
+    cout << "\n             Number Of Questions is : " << Quizz.NumberOfQuestions << endl;
+    cout << "\n           Questions Level : " << GetQuestionLevelText(Quizz.QuestionsLevel) << endl;
+    cout << "\n            OP Type : " << GetOpTypeSymbol(Quizz.OpType) << endl;
+    cout << "\n         Number Of Right Answers is : " << Quizz.NumberOfRightAnswers << endl;
+    cout << "\n             Number Of Wrong Answers is : " << Quizz.NumberOfWrongAnswers << endl;
+    cout << "                    _____________________________________\n";
 }
 
 void PlayMathGame()
@@ -288,4 +281,5 @@ int main()
 {
     srand((unsigned)time(NULL));  
     StartTheGame();
+    return 0;
 }
